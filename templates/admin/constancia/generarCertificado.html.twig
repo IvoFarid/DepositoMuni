@@ -1,0 +1,249 @@
+{% extends '@EasyAdmin/layout.html.twig' %}
+{% block page_title %}Depósito
+{% endblock %}
+{% block content_header %}
+  <div class="w-100 d-flex justify-content-between align-items-center">
+    <h3 class="fw-bolder">Generar Constancia</h3>
+    <a href="{{indexUrl}}" class="btn btn-secondary">
+			<i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </a>
+  </div>
+{% endblock %}
+{% block main %}
+{% block stylesheets %}
+	<!-- Linkeo a Select2 -->
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+{% endblock %}
+{% block javascripts %}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
+	{% form_theme form 'form/detailForm.html.twig' %}
+	{{ form_start(form, {'attr': {'id': 'sent_form'}}) }}
+    <div class="mb-3">
+      <label class="me-2 mb-1">{{ form_label(form.sendedTo) }}</label>
+      <div class="flex-grow-1">
+        {{ form_widget(form.sendedTo, { 'attr': { 'class': 'w-100 select2Dir' } }) }}
+      </div>
+    </div>
+    <div class="w-100 border-bottom border-secondary mb-3"></div>
+    <p class="mb-1">Detalle:</p>
+    <table class="table table-striped" id="details-container" data-prototype="{{ include('form/detailForm.html.twig', { 'form': form.details.vars.prototype }) | e }}">
+      <thead>
+        <tr>
+          <th scope="col" class="col-3">Producto</th>
+          <th scope="col" class="col-1">#</th>
+          <th scope="col" class="col-8">Series</th>
+          <th scope="col" class="col-2">Accion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% block form_errors %}
+          {{form_errors(form) }}
+        {% endblock %} 
+          {% for detail in form.details %}
+            <tr class="detail-item">
+              <td>
+                {{ form_widget(detail.product, { 'attr' : { 'class': 'select2Prod'}})}}
+              </td>
+              <td>
+                {{ form_widget(detail.quantity, { 'attr': {'class': 'w-100 mx-auto'} }) }}
+              </td>
+              <td>
+                <div class="d-flex justify-content-between align-items-center w-100 gap-1">
+                  {{form_widget(detail.series, { 'attr' : { 'class': 'w-100'}})}}
+                  <p class="series-counter mb-0" data-series-count="0">(0/1)</p>
+                </div>
+              </td>
+              <td>
+                <button type="button" class="remove-detail btn btn-danger">Eliminar</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+    <div id="errors" class="mb-2"></div>
+    <button type="button" id="add-detail" class="btn btn-success">Agregar Producto</button>
+    <button type="submit" class="btn btn-primary">Generar Constancia</button>
+	{{ form_end(form) }}
+	<script>
+    $('#sent_form').on('submit', function(e){
+      e.preventDefault();
+      let isValid = true; // Bandera para verificar si el formulario es válido
+      let errorMessage = ""; // Mensaje de error acumulado
+      $('table tbody tr').each(function () { // Recorremos cada fila
+        let row = $(this);
+        let quantityInput = row.find('input[name*="[quantity]"]');
+        let quantityValue = quantityInput.val();
+        let relatedTextInput = row.find('p.series-counter'); 
+        let currentSeriesCount = relatedTextInput.attr('data-series-count');
+        if (quantityValue !== currentSeriesCount) { // Validar si la cantidad coincide con la cantidad de series
+          isValid = false;
+          errorMessage += `<p class="text-danger mb-1">⚠ Error en la fila ${row.index()}: La cantidad asignada (${quantityValue}) debe coincidir con la cantidad de series ingresados (${currentSeriesCount}).</p>\n`;
+        }})
+        $('input[name*="[series]"]').each(function() {
+        let input = $(this);
+        let value = input.val();
+        let formattedValue = value.replace(/,\s*$/, ''); // Elimina la última coma si existe
+        input.val(formattedValue); // Actualiza el valor del input
+        });
+        $('#errors').html(errorMessage);
+        if (isValid) {
+          this.submit();
+        }
+    });
+
+		document.addEventListener("DOMContentLoaded", function () {
+      actualizarContadoresSeries();
+      $('.select2Dir').select2({width: '100%'});
+      $('.select2Prod').select2({width: '100%'});
+      $('.select2-container--default .select2-selection--single').css({'background-color': 'transparent', 'width': '100%'})
+      // changes the color of the text so i can work both on light/dark mode
+      $('.select2-container--default .select2-selection--single .select2-selection__rendered').css({'color': 'inherit'})
+      // adds margin between the input and the submit button
+      $('.select2-container').css({})
+      // disable arrow icon
+      $('.select2-selection__arrow')
+    });
+
+    function actualizarContadoresSeries() {
+        document.querySelectorAll('input[name*="[series]"]').forEach(input => {
+            contarSeries(input);
+        });
+    }
+
+    {# function renumerarFilas() {
+    $('#details-container tbody tr').each(function(index) {
+        $(this).find('input, select').each(function() {
+            let name = $(this).attr('name');
+            if (name) {
+                let newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                $(this).attr('name', newName);
+            }
+        });
+    });
+  } #}
+
+    function contarSeries(input){
+      const series = input.value.split(',').filter(item => item.trim() !== '');
+      const count = series.length;
+      let row = $(input).closest('tr');
+      let relatedTextInput = row.find('p');
+      let relatedQuantityInput = row.find('input[name*="[quantity]"]');
+      relatedTextInput.attr('data-series-count', relatedQuantityInput.val());
+      // Actualizar el contador en el span
+      relatedTextInput.html(`(${count}/${relatedQuantityInput.val()})`);
+    }
+
+    let detailIndex = document.querySelectorAll('.detail-item').length +1;
+    // Agregar un nuevo detalle
+    document.getElementById('add-detail').addEventListener('click', function () {
+      const tbody = document.querySelector('#details-container tbody'); // Agregar en el tbody
+      const container = document.getElementById('details-container');
+      const prototype = container.getAttribute('data-prototype');
+
+      // Reemplaza el __name__ del prototipo con el índice actual
+      const newForm = prototype.replace(/__name__/g, detailIndex);
+      detailIndex++;
+
+      // Crear una nueva fila en lugar de un div
+      const newRow = document.createElement('tr');
+      newRow.innerHTML = newForm;
+      newRow.classList.add('detail-item');
+      // Crear el botón de eliminar dentro de una celda <td>
+      const removeButton = document.createElement('button');
+      removeButton.setAttribute('type', 'button');
+      removeButton.classList.add('btn', 'btn-danger', 'remove-detail');
+      removeButton.innerText = 'Eliminar';
+
+      // Crear una celda para el botón y agregarlo dentro de la fila
+      const actionCell = document.createElement('td');
+      actionCell.appendChild(removeButton);
+      newRow.appendChild(actionCell);
+
+      // Agregar la nueva fila al tbody
+      tbody.appendChild(newRow);
+
+      // Re-inicializar select2 si es necesario
+      let newSelect = newRow.querySelector(".select2Prod");
+      $(newSelect).select2({width: '100%'});
+      $('.select2-container--default .select2-selection--single').css({'background-color': 'transparent', 'width': '100%'})
+      // changes the color of the text so i can work both on light/dark mode
+      $('.select2-container--default .select2-selection--single .select2-selection__rendered').css({'color': 'inherit'})
+      // adds margin between the input and the submit button
+      $('.select2-container').css({})
+      // disable arrow icon
+      $('.select2-selection__arrow')
+    });
+
+    $(document).on('select2:open', '.select2Prod', function (e) {
+      //console.log('clickee');
+      var dropdown = $('.select2-dropdown');
+      dropdown.css({'background-color': '#6A7F82', 'box-shadow': '0 2px 5px black'});
+      dropdown.css('border', '0');
+      dropdown.find('[type=search]').css('outline-offset', '0');
+      dropdown.find('.select2-container--default .select2-results__option--selected').css('color', 'red !important')
+      dropdown.find('.select2-search__field').css({'border': '0'});
+      })
+
+    $(document).on('select2:open', '.select2Dir', function (e) {
+      var dropdown = $('.select2-dropdown');
+      dropdown.css({'background-color': '#6A7F82', 'box-shadow': '0 2px 5px black'});
+      dropdown.css('border', '0');
+      dropdown.find('[type=search]').css('outline-offset', '0');
+      dropdown.find('.select2-container--default .select2-results__option--selected').css('color', 'red !important')
+      dropdown.find('.select2-search__field').css({'border': '0'});
+    })
+
+
+    // FUNCION QUE BUSCA ACTUALIZAR EL INPUT DE CANTIDAD SEGÚN EL ELEMENTO SELECCIONADO.
+    $(document).on('select2:select', function (e) {
+      selectElement = $(e.target);
+      let row = selectElement.closest('tr');
+      console.log(row);
+      let quantityInput = row.find('input[name*="quantity"]'); // Puedes usar el name o clase que lo identifique
+      quantityInput.val();
+    })
+      
+    document.addEventListener('click', function (event) {
+      if (event.target && event.target.classList.contains('remove-detail')) {
+        const detailRow = event.target.closest('tr');
+        if (detailRow) {
+          detailRow.remove();
+        }
+      } 
+    });
+    $(document).on('change', 'input[name*="[quantity]"]', function () {
+      let quantityInput = $(this); // El input que cambió
+      let row = quantityInput.closest('tr'); // Buscar la fila donde está el input
+      
+      let relatedTextInput = row.find('p.series-counter'); // Buscar el otro input en la misma fila
+      let currentSeriesCount = relatedTextInput.attr('data-series-count');
+      console.log(currentSeriesCount, 'CONTADOR ACTUAL');
+      let newValue = quantityInput.val(); // Obtener el valor ingresado en quantity
+      relatedTextInput.html(`(${currentSeriesCount}/${newValue})`); // Actualizar el input de texto
+    });
+
+    $(document).on('input', 'input[name*="[series]"]', function(){
+      let inputSeries = $(this);
+      let valueSeries = $(this).val();
+      let row = inputSeries.closest('tr');
+      let relatedTextInput = row.find('p');
+      let relatedQuantityInput = row.find('input[name*="[quantity]"]');
+      valueSeries = valueSeries
+        .replace(/,+/g, ',') // Reemplazar múltiples comas consecutivas por una sola
+        .replace(/\s*,\s*/g, ',') // Eliminar espacios alrededor de las comas
+        .replace(/\s+/g, ''); // Eliminar todos los espacios en general
+    // Actualizar el valor limpio en el input
+      $(this).val(valueSeries);
+      const series = valueSeries.split(',').filter(item => item.trim() !== '');
+      const count = series.length;
+      // Actualizar el contador en el span
+      relatedTextInput.html(`(${count}/${relatedQuantityInput.val()})`);
+      relatedTextInput.attr('data-series-count', count);
+    })
+  </script>
+<!-- fecha de recibido, nombre de quien retira del depósito (el que solicita hacer la constancia), estado de certificaod, numero del mismo. -->
+{% endblock %}

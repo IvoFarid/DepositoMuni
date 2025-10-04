@@ -1,0 +1,25 @@
+<tr>
+	<td>
+		{{ form_widget(form.product, { 'attr' : { 'class': 'select2Prod'}})}}
+	</td>
+	<td>
+		{{ form_widget(form.quantity, { 'attr': {'class': 'w-100 mx-auto'} }) }}
+	</td>
+	<td>
+		<div class="d-flex justify-content-between align-items-center w-100 gap-1">
+			{{form_widget(form.series, { 'attr' : { 'class': 'w-100'}})}}
+			<p class="series-counter mb-0" data-series-count="0">(0/)</p>
+		</div>
+	</td>
+</tr>
+{% block form_errors %}
+	{% if form.vars.errors|length > 0 %}
+		<tr class="text-danger">
+			<td colspan="4">
+				{% for error in form.vars.errors %}
+					<p class="m-0">⚠{{ error.message }}</p>
+				{% endfor %}
+			</td>
+		</tr>
+	{% endif %}
+{% endblock %}

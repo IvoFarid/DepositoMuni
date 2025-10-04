@@ -1,0 +1,50 @@
+{% extends '@EasyAdmin/layout.html.twig' %}
+{% block content_title %}
+	<!-- Linkeo a Select2 -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
+{% block page_title %}Depósito
+{% endblock %}
+{% block content_header %}
+  <div class="d-flex w-100 justify-content-between align-items-center">
+		<h3 class="fw-bolder">Constancia del día
+			{{ constancia.getDate()|fecha_localizada }}</h3>
+		<div class="d-flex gap-2">
+			<a href="{{indexUrl}}" class="btn btn-secondary">
+				<i class="fa-solid fa-arrow-left"></i>
+				Volver</a>
+			<a href="{{ downloadUrl }}" class="btn btn-primary"><i class="fa-solid fa-download"></i> Imprimir</a>
+		</div>
+	</div>
+{% endblock %}
+{# {% block content_header_wrapper %}{% endblock content_header_wrapper %} #}
+{% block main %}
+	
+	<p class="mb-4 fw-light">
+		<span class="fw-normal">Enviado a:</span>
+		{{ constancia.getSendedTo() }}</p>
+	<p>Detalle de artículos:</p>
+	<table class="table table-striped" id="details-container">
+		<thead>
+			<tr>
+				<th scope="col" class="col-3">Producto</th>
+				<th scope="col" class="col-5">Series</th>
+				<th scope="col" class="col-2">Cantidad enviada</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for detail in details %}
+				<tr>
+					<td>{{ detail.product.type }}
+						{{ detail.product.brand }},
+						{{ detail.product.model }}</td>
+					<td>{{ detail.series }}</td>
+					<td>{{ detail.quantity }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+<!-- CAMBIAR EL PDF -->
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends '@EasyAdmin/layout.html.twig' %}
+{% block page_title %}Depósito
+{% endblock %}
+{% block main %}
+  <style>
+  .navbar-custom-menu {
+    display: none !important;
+}</style>
+	<h1>Sistema Depósito</h1>
+	<p class="mb-1">
+		• En "Otras Acciones" se cargan tipos de producto, marcas y destinos. &#40Evita tipeos erróneos&#41.
+	</p>
+  <p class="mb-1">
+		• En "Inventario" se visualizan y cargan los productos.
+	</p>
+  <p class="mb-1">
+		• En "Constancias" figura el listado pudiéndose ver el detalle de las mismas, reimprimirlas o generar nuevas. 
+	</p>
+	<p class="mb-1">
+		• Los productos que posean stock válido serán seleccionables al generar la constancia.
+	</p>
+	<p class="mb-1">
+		• Cuando no queden existencias de un producto éste se puede editar para actualizar stock y poder volver a darle salida.
+	</p>
+  <p class="mb-1">
+		• No se pueden eliminar productos ya que están vinculados a los detalles de una constancia, pero sí se pueden ocultar si ya no hay existencias del mismo. 
+	</p>
+{% endblock %}
